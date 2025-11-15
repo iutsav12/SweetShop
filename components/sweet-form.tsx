@@ -11,9 +11,9 @@ interface SweetFormProps {
     price: number;
     quantity: number;
     description: string;
-    image: string; // existing image URL or emoji
+    image: string;
   };
-  onSubmit: (data: FormData) => void; // now sends FormData
+  onSubmit: (data: any) => void;
   loading: boolean;
   mode: 'add' | 'edit';
 }
@@ -24,53 +24,20 @@ export function SweetForm({
   loading,
   mode,
 }: SweetFormProps) {
-  const [formData, setFormData] = useState({
-    name: initialData?.name ?? '',
-    category: initialData?.category ?? 'Chocolate',
-    price: initialData?.price ?? 0,
-    quantity: initialData?.quantity ?? 0,
-    description: initialData?.description ?? '',
-    image: initialData?.image ?? '', // for edit mode (existing URL/emoji)
-  });
-
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(
-    initialData?.image ?? null
-  );
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setImageFile(file);
-
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreview(url);
+  const [formData, setFormData] = useState(
+    initialData || {
+      name: '',
+      category: 'Chocolate',
+      price: 0,
+      quantity: 0,
+      description: '',
+      image: '',
     }
-  };
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    const data = new FormData();
-    data.append('name', formData.name);
-    data.append('category', formData.category);
-    data.append('price', String(formData.price));
-    data.append('quantity', String(formData.quantity));
-    data.append('description', formData.description);
-
-    if (imageFile) {
-      // New file selected
-      data.append('image', imageFile);
-    } else if (formData.image) {
-      // Keep old image in edit mode if no new file
-      data.append('existingImage', formData.image);
-    }
-
-    if (initialData?._id) {
-      data.append('_id', initialData._id);
-    }
-
-    onSubmit(data);
+    onSubmit(formData);
   };
 
   return (
@@ -121,10 +88,7 @@ export function SweetForm({
             step="0.01"
             value={formData.price}
             onChange={(e) =>
-              setFormData({
-                ...formData,
-                price: parseFloat(e.target.value || '0'),
-              })
+              setFormData({ ...formData, price: parseFloat(e.target.value) })
             }
             className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text focus:outline-none focus:border-primary"
             required
@@ -138,17 +102,13 @@ export function SweetForm({
             type="number"
             value={formData.quantity}
             onChange={(e) =>
-              setFormData({
-                ...formData,
-                quantity: parseInt(e.target.value || '0'),
-              })
+              setFormData({ ...formData, quantity: parseInt(e.target.value) })
             }
             className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text focus:outline-none focus:border-primary"
             required
           />
         </div>
       </div>
-
       <div>
         <label className="block text-sm font-medium text-text mb-2">
           Description
@@ -162,30 +122,20 @@ export function SweetForm({
           rows={3}
         />
       </div>
-
       <div>
         <label className="block text-sm font-medium text-text mb-2">
-          Image (upload from device)
+          Image (emoji or URL)
         </label>
         <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
+          type="text"
+          value={formData.image}
+          onChange={(e) =>
+            setFormData({ ...formData, image: e.target.value })
+          }
           className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text focus:outline-none focus:border-primary"
+          placeholder="🍬 or image URL"
         />
-        {preview && (
-          <div className="mt-2">
-            <p className="text-xs text-text/70 mb-1">Preview:</p>
-            {/* If preview is URL of real image, this works fine. If old value was emoji, it'll still try to load, but mostly you'll now use files. */}
-            <img
-              src={preview}
-              alt="Preview"
-              className="h-24 w-24 object-cover rounded-lg border border-border"
-            />
-          </div>
-        )}
       </div>
-
       <motion.button
         type="submit"
         disabled={loading}
@@ -196,8 +146,8 @@ export function SweetForm({
         {loading
           ? 'Processing...'
           : mode === 'add'
-          ? 'Add Sweet'
-          : 'Update Sweet'}
+            ? 'Add Sweet'
+            : 'Update Sweet'}
       </motion.button>
     </motion.form>
   );

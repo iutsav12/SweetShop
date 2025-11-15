@@ -12,7 +12,7 @@ interface Sweet {
   price: number;
   quantity: number;
   description: string;
-  image: string; // URL or emoji
+  image: string; // URL, emoji, or data:image base64
 }
 
 export default function AdminPanel() {
@@ -51,7 +51,32 @@ export default function AdminPanel() {
     fetchSweets();
   }, [router]);
 
-  // ADD with FormData (including file)
+  // ---------- helpers ----------
+  const renderSweetImage = (sweet: Sweet) => {
+    const value = sweet.image;
+    if (!value) return <span className="text-2xl">🍬</span>;
+
+    const isHttpUrl =
+      value.startsWith('http://') || value.startsWith('https://');
+    const isDataUrl = value.startsWith('data:image');
+
+    if (isHttpUrl || isDataUrl) {
+      return (
+        <img
+          src={value}
+          alt={sweet.name}
+          className="h-10 w-10 rounded-md object-cover border border-border"
+        />
+      );
+    }
+
+    // fallback – emoji or any short text
+    return <span className="text-2xl">{value}</span>;
+  };
+
+  // ---------- CRUD handlers ----------
+
+  // expects FormData from SweetForm
   const handleAddSweet = async (formData: FormData) => {
     setLoading(true);
     const token = localStorage.getItem('token');
@@ -59,16 +84,23 @@ export default function AdminPanel() {
       const res = await fetch('/api/sweets', {
         method: 'POST',
         headers: {
-          // IMPORTANT: don't set Content-Type manually for FormData
+          // do NOT manually set Content-Type for FormData
           Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
-      const data: Sweet = await res.json();
-      if (data._id) {
-        setSweets([...sweets, data]);
-        setMode('list');
+
+      const data: Sweet | { error?: string } | null = await res
+        .json()
+        .catch(() => null);
+
+      if (!res.ok || !data || !('_id' in data)) {
+        console.error('Failed to add sweet. Response:', data);
+        return;
       }
+
+      setSweets((prev) => [...prev, data]);
+      setMode('list');
     } catch (error) {
       console.error('Failed to add sweet:', error);
     } finally {
@@ -76,9 +108,11 @@ export default function AdminPanel() {
     }
   };
 
-  // UPDATE with FormData (including optional new file)
   const handleUpdateSweet = async (formData: FormData) => {
-    if (!selectedSweet?._id) return;
+    if (!selectedSweet?._id) {
+      console.error('No sweet selected for update');
+      return;
+    }
 
     setLoading(true);
     const token = localStorage.getItem('token');
@@ -86,17 +120,24 @@ export default function AdminPanel() {
       const res = await fetch(`/api/sweets/${selectedSweet._id}`, {
         method: 'PUT',
         headers: {
-          // Again, don't set Content-Type for FormData
+          // again, no Content-Type here for FormData
           Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
-      const data: Sweet = await res.json();
-      if (data._id) {
-        setSweets(sweets.map((s) => (s._id === data._id ? data : s)));
-        setMode('list');
-        setSelectedSweet(null);
+
+      const data: Sweet | { error?: string } | null = await res
+        .json()
+        .catch(() => null);
+
+      if (!res.ok || !data || !('_id' in data)) {
+        console.error('Failed to update sweet. Response:', data);
+        return;
       }
+
+      setSweets((prev) => prev.map((s) => (s._id === data._id ? data : s)));
+      setMode('list');
+      setSelectedSweet(null);
     } catch (error) {
       console.error('Failed to update sweet:', error);
     } finally {
@@ -113,7 +154,7 @@ export default function AdminPanel() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setSweets(sweets.filter((s) => s._id !== id));
+      setSweets((prev) => prev.filter((s) => s._id !== id));
     } catch (error) {
       console.error('Failed to delete sweet:', error);
     }
@@ -132,8 +173,8 @@ export default function AdminPanel() {
       });
       const data = await res.json();
       if (data.sweet) {
-        setSweets(
-          sweets.map((s) => (s._id === data.sweet._id ? data.sweet : s))
+        setSweets((prev) =>
+          prev.map((s) => (s._id === data.sweet._id ? data.sweet : s))
         );
         setRestockId(null);
       }
@@ -142,22 +183,7 @@ export default function AdminPanel() {
     }
   };
 
-  const renderSweetImage = (sweet: Sweet) => {
-    const value = sweet.image;
-    const isUrl = value?.startsWith('http://') || value?.startsWith('https://');
-
-    if (isUrl) {
-      return (
-        <img
-          src={value}
-          alt={sweet.name}
-          className="h-10 w-10 rounded-md object-cover border border-border"
-        />
-      );
-    }
-
-    return <span className="text-2xl">{value || '🍬'}</span>;
-  };
+  // ---------- JSX ----------
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-surface to-background">
