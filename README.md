@@ -1,117 +1,214 @@
-# Sweet Shop Management System
+# 🍬 Sweet Shop Management System
 
-A full-stack sweet shop management application built with Next.js, MongoDB, and Framer Motion animations.
+A full-stack Sweet Shop Management System that allows users to browse, search, and purchase sweets, while admins can manage inventory and sweet details. This project demonstrates RESTful API design, authentication, database integration, and a modern SPA frontend.
 
-## Features
+---
 
-- **User Authentication**: Secure JWT-based authentication system
-- **Product Management**: Add, edit, delete, and restock sweets
-- **Shopping Experience**: Browse, search, and purchase sweets
-- **Admin Panel**: Comprehensive management interface for administrators
-- **Beautiful Animations**: Smooth transitions and interactive components
-- **Responsive Design**: Mobile-first design with modern glassmorphism
+## 🚀 Tech Stack
 
-## Tech Stack
+### Backend
+- **Node.js** + **TypeScript**
+- **Next.js Route Handlers** (API layer)
+- **MongoDB** (with Mongoose)
+- **JWT** for authentication
+- **BCrypt** for password hashing
 
-- **Frontend**: Next.js 16, React 19, Tailwind CSS, Framer Motion
-- **Backend**: Node.js, Express (via Next.js API routes)
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT with bcryptjs
+### Frontend
+- **Next.js** (React)
+- **Tailwind CSS** for styling
+- **Axios / fetch** for API calls
 
-## Getting Started
+---
 
-### Prerequisites
+## 📦 Core Features
 
-- Node.js 18+
-- MongoDB connection URL
+- 🔐 **User Authentication**
+  - User registration and login
+  - JWT-based authentication
+  - Protected routes for logged-in users
 
-### Installation
+- 🍭 **Sweet Management**
+  - Each sweet has: `id`, `name`, `category`, `price`, `quantity`
+  - List all sweets
+  - Search & filter sweets (by name, category, price range)
+  - Admin-only CRUD operations
 
-1. Install dependencies:
-\`\`\`bash
-npm install
-\`\`\`
+- 📉 **Inventory Management**
+  - Purchase sweet → decreases quantity
+  - Restock sweet → increases quantity (Admin only)
+  - Purchase button disabled if quantity is `0`
 
-2. Configure environment variables in `.env.local`:
-\`\`\`env
-MONGODB_URI=your_mongodb_url
-JWT_SECRET=your_secret_key
-NODE_ENV=development
-NEXT_PUBLIC_API_URL=http://localhost:3000
-\`\`\`
+- 🧑‍💻 **Role-Based Access**
+  - Normal users: can view & purchase sweets
+  - Admin users: can add, update, delete, and restock sweets
 
-3. Run the development server:
-\`\`\`bash
-npm run dev
-\`\`\`
+---
 
-Visit `http://localhost:3000` to see the application.
+## 📡 API Endpoints
 
-## Project Structure
+### Auth (Public)
 
-\`\`\`
-├── app/
-│   ├── api/              # API routes
-│   ├── admin/            # Admin dashboard
-│   ├── dashboard/        # User dashboard
-│   └── layout.tsx        # Root layout
-├── components/           # React components
-├── hooks/                # Custom hooks
-├── lib/                  # Utilities
-├── models/               # MongoDB schemas
-└── scripts/              # Database scripts
-\`\`\`
+- `POST /api/auth/register`  
+  Register a new user.
 
-## API Endpoints
+- `POST /api/auth/login`  
+  Login user and return a JWT token.
 
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
+---
 
-### Sweets
-- `GET /api/sweets` - Get all sweets
-- `POST /api/sweets` - Add new sweet (admin only)
-- `GET /api/sweets/search` - Search sweets
-- `PUT /api/sweets/:id` - Update sweet (admin only)
-- `DELETE /api/sweets/:id` - Delete sweet (admin only)
+### Sweets (Protected)
 
-### Inventory
-- `POST /api/sweets/:id/purchase` - Purchase sweet
-- `POST /api/sweets/:id/restock` - Restock sweet (admin only)
+- `POST /api/sweets`  
+  Add a new sweet. **(Admin only)**
 
-## Demo Credentials
+- `GET /api/sweets`  
+  Get a list of all available sweets.
 
-**Admin Account:**
-- Email: `admin@sweetshop.com`
-- Password: `admin123`
+- `GET /api/sweets/search?name=&category=&minPrice=&maxPrice=`  
+  Search sweets by:
+  - name (partial match)
+  - category
+  - price range (`minPrice`, `maxPrice`)
 
-**User Account:**
-- Email: `user@example.com`
-- Password: `user123`
+- `PUT /api/sweets/:id`  
+  Update an existing sweet. **(Admin only)**
 
-## Features Implemented
+- `DELETE /api/sweets/:id`  
+  Delete a sweet. **(Admin only)**
 
-✅ Backend API with all required endpoints
-✅ User authentication with JWT tokens
-✅ Product CRUD operations
-✅ Inventory management
-✅ Search and filtering
-✅ Admin panel
-✅ Beautiful animations with Framer Motion
-✅ Responsive mobile-first design
-✅ Modern glassmorphism UI
-✅ Professional color scheme
+---
 
-## Future Enhancements
+### Inventory (Protected)
 
-- Shopping cart functionality
-- Order history
-- Payment integration
-- User wishlist
-- Product ratings and reviews
-- Email notifications
-- Dashboard analytics
+- `POST /api/sweets/:id/purchase`  
+  Purchase a sweet. Decreases its `quantity` by 1 (or specified amount).
 
-## License
+- `POST /api/sweets/:id/restock`  
+  Restock a sweet. Increases its `quantity`. **(Admin only)**
 
-MIT
+---
+
+## 🖥️ Frontend Functionality
+
+- ✅ User registration & login forms
+- ✅ Dashboard page showing all sweets
+- ✅ Search & filter sweets (by name/category/price)
+- ✅ “Purchase” button:
+  - Disabled when quantity = 0
+  - On success, updates quantity
+- ✅ Admin UI:
+  - Add new sweet
+  - Edit sweet details
+  - Delete sweet
+  - Restock inventory
+
+---
+
+# 🍬 Sweet Shop Management System
+
+A full-stack Sweet Shop Management System that allows users to browse, search, and purchase sweets, while admins can manage inventory and stock. This project is built as part of a kata to practice API development, database integration, frontend SPA, testing, and AI-assisted workflows.
+
+---
+
+## 🚀 Tech Stack
+
+### Backend
+- Node.js + TypeScript
+- Express / Next.js Route Handlers (API layer)
+- MongoDB with Mongoose
+- JWT for authentication & authorization
+- Bcrypt for password hashing
+
+### Frontend
+- Next.js (React)
+- Tailwind CSS for responsive UI
+- Fetch / Axios for API calls
+
+### Database
+- MongoDB (Not in-memory, persistent storage)
+
+---
+---
+
+## 🔑 Default Login Credentials
+
+For testing the application, you can use the following accounts:
+
+### 👤 Normal User
+- Email: `user@gmail.com`
+- Password: `user`
+
+### 🛠️ Admin User
+- Email: `utsav@gmail.com`
+- Password: `utsav`
+
+These accounts may be auto-generated using the seed script or can be added manually via database before running the project.
+
+## 🧩 Core Requirements Mapping
+
+### 1. Backend API (RESTful)
+
+**Auth:**
+- `POST /api/auth/register` – User registration
+- `POST /api/auth/login` – User login, returns JWT
+
+**Sweets (Protected):**
+- `POST /api/sweets` – Add a new sweet (Admin only)
+- `GET /api/sweets` – Get list of all sweets
+- `GET /api/sweets/search` – Search sweets by name, category, or price range
+- `PUT /api/sweets/:id` – Update sweet details (Admin only)
+- `DELETE /api/sweets/:id` – Delete a sweet (Admin only)
+
+**Inventory (Protected):**
+- `POST /api/sweets/:id/purchase` – Purchase a sweet (decrease quantity)
+- `POST /api/sweets/:id/restock` – Restock a sweet (increase quantity, Admin only)
+
+Each sweet has:
+- `id` (unique)
+- `name`
+- `category`
+- `price`
+- `quantity` (in stock)
+
+---
+
+### 2. Frontend Application (SPA)
+
+- Built using **Next.js (React)**.
+- Single-page experience with:
+  - User registration and login forms
+  - Dashboard to display all sweets
+  - Search and filter sweets
+  - “Purchase” button on each sweet  
+    - Disabled if quantity is `0`
+  - Admin UI for:
+    - Adding sweets
+    - Updating sweets
+    - Deleting sweets
+    - Restocking inventory
+- Responsive, modern UI styled with Tailwind CSS.
+
+---
+
+## 📡 API Endpoints (Summary)
+
+### Auth (Public)
+- `POST /api/auth/register`  
+  Body: `{ name, email, password }`  
+  Action: Creates a new user.
+
+- `POST /api/auth/login`  
+  Body: `{ email, password }`  
+  Action: Returns JWT token on success.
+
+---
+
+### Sweets (Protected – JWT required)
+
+- `GET /api/sweets`  
+  Returns all sweets.
+
+- `GET /api/sweets/search?name=&category=&minPrice=&maxPrice=`  
+  Search parameters:
+
+
