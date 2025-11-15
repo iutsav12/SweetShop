@@ -12,7 +12,7 @@ interface Sweet {
   price: number;
   quantity: number;
   description: string;
-  image: string;
+  image: string; // URL or emoji
 }
 
 export default function AdminPanel() {
@@ -51,19 +51,20 @@ export default function AdminPanel() {
     fetchSweets();
   }, [router]);
 
-  const handleAddSweet = async (formData: any) => {
+  // ADD with FormData (including file)
+  const handleAddSweet = async (formData: FormData) => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/sweets', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          // IMPORTANT: don't set Content-Type manually for FormData
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: formData,
       });
-      const data = await res.json();
+      const data: Sweet = await res.json();
       if (data._id) {
         setSweets([...sweets, data]);
         setMode('list');
@@ -75,19 +76,22 @@ export default function AdminPanel() {
     }
   };
 
-  const handleUpdateSweet = async (formData: any) => {
+  // UPDATE with FormData (including optional new file)
+  const handleUpdateSweet = async (formData: FormData) => {
+    if (!selectedSweet?._id) return;
+
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`/api/sweets/${selectedSweet?._id}`, {
+      const res = await fetch(`/api/sweets/${selectedSweet._id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
+          // Again, don't set Content-Type for FormData
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: formData,
       });
-      const data = await res.json();
+      const data: Sweet = await res.json();
       if (data._id) {
         setSweets(sweets.map((s) => (s._id === data._id ? data : s)));
         setMode('list');
@@ -128,12 +132,31 @@ export default function AdminPanel() {
       });
       const data = await res.json();
       if (data.sweet) {
-        setSweets(sweets.map((s) => (s._id === data.sweet._id ? data.sweet : s)));
+        setSweets(
+          sweets.map((s) => (s._id === data.sweet._id ? data.sweet : s))
+        );
         setRestockId(null);
       }
     } catch (error) {
       console.error('Restock failed:', error);
     }
+  };
+
+  const renderSweetImage = (sweet: Sweet) => {
+    const value = sweet.image;
+    const isUrl = value?.startsWith('http://') || value?.startsWith('https://');
+
+    if (isUrl) {
+      return (
+        <img
+          src={value}
+          alt={sweet.name}
+          className="h-10 w-10 rounded-md object-cover border border-border"
+        />
+      );
+    }
+
+    return <span className="text-2xl">{value || '🍬'}</span>;
   };
 
   return (
@@ -223,20 +246,27 @@ export default function AdminPanel() {
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">{sweet.image || '🍬'}</span>
+                    {renderSweetImage(sweet)}
                     <div>
                       <h3 className="font-bold text-text">{sweet.name}</h3>
                       <p className="text-xs text-primary">{sweet.category}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-text-muted">{sweet.description}</p>
+                  <p className="text-sm text-text-muted">
+                    {sweet.description}
+                  </p>
                   <div className="mt-2 flex gap-4">
                     <span className="text-sm">
-                      Price: <span className="text-accent font-bold">${sweet.price}</span>
+                      Price:{' '}
+                      <span className="text-accent font-bold">
+                        ${sweet.price}
+                      </span>
                     </span>
                     <span
                       className={`text-sm ${
-                        sweet.quantity > 0 ? 'text-green-400' : 'text-red-400'
+                        sweet.quantity > 0
+                          ? 'text-green-400'
+                          : 'text-red-400'
                       }`}
                     >
                       Stock: {sweet.quantity}
@@ -251,13 +281,13 @@ export default function AdminPanel() {
                         type="number"
                         min="1"
                         value={restockQty}
-                        onChange={(e) => setRestockQty(parseInt(e.target.value))}
+                        onChange={(e) =>
+                          setRestockQty(parseInt(e.target.value || '1'))
+                        }
                         className="w-16 px-2 py-1 bg-background border border-border rounded text-text text-sm"
                       />
                       <motion.button
-                        onClick={() =>
-                          handleRestock(sweet._id, restockQty)
-                        }
+                        onClick={() => handleRestock(sweet._id, restockQty)}
                         className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
                         whileTap={{ scale: 0.95 }}
                       >
@@ -312,11 +342,7 @@ export default function AdminPanel() {
             animate={{ opacity: 1, scale: 1 }}
           >
             <h2 className="text-xl font-bold mb-4 text-text">Add New Sweet</h2>
-            <SweetForm
-              onSubmit={handleAddSweet}
-              loading={loading}
-              mode="add"
-            />
+            <SweetForm onSubmit={handleAddSweet} loading={loading} mode="add" />
           </motion.div>
         )}
 
